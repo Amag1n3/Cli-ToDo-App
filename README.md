@@ -1,9 +1,7 @@
-Set the env variable for the file.
+"
+git clone https://github.com/Amag1n3/gotodo.git ~/Downloads/CliTodoApp
 
-cd Downloads
-
-cd (this repos git clone end folder)
+cd ~/Downloads/CliTodoApp
 
 touch todo_list.txt
-
-export todolistpath="(actual path to file .txt file)"
+"
