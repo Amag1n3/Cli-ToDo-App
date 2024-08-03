@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 )
 
 func writeTask() string {
@@ -29,7 +30,9 @@ func writeTask() string {
 		taskStatus = "Ongoing"
 	}
 
-	task := fmt.Sprintf("%s,%s,%s,%s\n", taskName, taskDate, taskTime, taskStatus)
+	creationTime := time.Now().Format("02/01/2006 1504")
+
+	task := fmt.Sprintf("%s,%s,%s,%s,%s\n", taskName, taskDate, taskTime, taskStatus, creationTime)
 	return task
 }
 
@@ -47,7 +50,8 @@ func listTasks() {
 	reader := bufio.NewReader(file)
 	fmt.Println("How would you like to list the tasks?(1: All, 2: Date, 3: Status)")
 	fmt.Scanln(&choice)
-
+	now := time.Now()
+	var timeLeft string
 	if choice == 1 {
 		for {
 			line, err := reader.ReadString('\n')
@@ -58,7 +62,36 @@ func listTasks() {
 				fmt.Println("Error:", err)
 				return
 			}
-			fmt.Println(line) // Print the line
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			fields := strings.Split(line, ",")
+			if len(fields) != 5 {
+				continue
+			}
+			taskName := fields[0]
+			taskDate := fields[1]
+			taskTime := fields[2]
+			taskStatus := fields[3]
+			//creationTime := fields[4]
+
+			deadlineStr := taskDate + " " + taskTime
+			deadlineTime, err := time.Parse("02/01/2006 1504", deadlineStr)
+			if err != nil {
+				fmt.Println("error parsing time:", err)
+			}
+			duration := deadlineTime.Sub(now)
+			if duration < 0 {
+				timeLeft = "Task overdue"
+			} else {
+				days := int(duration.Hours()) / 24
+				hours := int(duration.Hours()) % 24
+				minutes := int(duration.Minutes()) % 60
+				timeLeft = fmt.Sprintf("Time left to complete: %d days, %d hours, %d minutes", days, hours, minutes)
+			}
+			fmt.Printf("Name: %s, Date: %s, Time: %s, Status: %s, %s\n", taskName, taskDate, taskTime, taskStatus, timeLeft)
+
 		}
 	}
 	if choice == 2 {
@@ -80,17 +113,29 @@ func listTasks() {
 				continue
 			}
 			fields := strings.Split(line, ",")
-			//if len(fields) != 4 {
-			//  fmt.Printf("Error: Invalid task format or missing fields in line: %s", line)
-			//  continue
-			//}
+			if len(fields) != 5 {
+				fmt.Printf("Error: Invalid task format or missing fields in line: %s", line)
+				continue
+			}
 			taskName := fields[0]
 			taskDate := fields[1]
 			taskTime := fields[2]
 			taskStatus := fields[3]
 
 			if date == taskDate {
-				fmt.Printf("Name: %s,Date: %s,Time: %s,Status: %s\n", taskName, taskDate, taskTime, taskStatus)
+				deadlineStr := taskDate + " " + taskTime
+				deadlineTime, _ := time.Parse("02/01/2006 1504", deadlineStr)
+				duration := deadlineTime.Sub(now)
+				timeLeft := "Time left to complete: " + duration.String()
+				if duration < 0 {
+					timeLeft = "Task Overdue"
+				} else {
+					days := int(duration.Hours()) / 24
+					hours := int(duration.Hours()) % 24
+					minutes := int(duration.Minutes()) % 60
+					timeLeft = fmt.Sprintf("Time left to complete: %d days, %d hours, %d minutes", days, hours, minutes)
+				}
+				fmt.Printf("Name: %s,Date: %s,Time: %s,Status: %s, %s\n", taskName, taskDate, taskTime, taskStatus, timeLeft)
 			}
 
 		}
@@ -122,7 +167,22 @@ func listTasks() {
 			taskTime := fields[2]
 			taskStatus := fields[3]
 			if status == taskStatus {
-				fmt.Printf("Name: %s,Date: %s,Time: %s,Status: %s\n", taskName, taskDate, taskTime, taskStatus)
+				deadlineStr := taskDate + " " + taskTime
+				deadlineTime, err := time.Parse("02/01/2006 1504", deadlineStr)
+				if err != nil {
+					fmt.Println("error parsing time:", err)
+				}
+				duration := deadlineTime.Sub(now)
+				timeLeft := "Time left to complete: " + duration.String()
+				if duration < 0 {
+					timeLeft = "Task overdue"
+				} else {
+					days := int(duration.Hours()) / 24
+					hours := int(duration.Hours()) % 24
+					minutes := int(duration.Minutes()) % 60
+					timeLeft = fmt.Sprintf("Time left to complete: %d days, %d hours, %d minutes", days, hours, minutes)
+				}
+				fmt.Printf("Name: %s, Date: %s, Time: %s, Status: %s, %s\n", taskName, taskDate, taskTime, taskStatus, timeLeft)
 			}
 		}
 	}
@@ -144,6 +204,7 @@ func editTask() {
 	var tasks []string
 	filereader := bufio.NewReader(file)
 	found := false
+	anyEdited := false
 	for {
 		line, err := filereader.ReadString('\n')
 		if err != nil {
@@ -159,7 +220,7 @@ func editTask() {
 		if name == fields[0] {
 			found = true
 			var num int
-			fmt.Println("Enter field to edit: 1. Name, 2. Status")
+			fmt.Println("Enter field to edit: 1. Name, 2. Status, 3. Time, 4. Date")
 			fmt.Scanln(&num)
 			if num == 1 {
 				fmt.Println("Enter new name for the task: ")
@@ -169,7 +230,7 @@ func editTask() {
 					newName = fields[0]
 				}
 				fields[0] = newName
-
+				anyEdited = true
 			} else if num == 2 {
 				fmt.Println("Enter new status for the task: ")
 				newStatus, _ := reader.ReadString('\n')
@@ -177,9 +238,18 @@ func editTask() {
 				if newStatus == "" {
 					newStatus = fields[3]
 				}
-				fields[3] = newStatus
-				editedTask := fmt.Sprintf("%s,%s,%s,%s", fields[0], fields[1], fields[2], fields[3])
-				tasks = append(tasks, editedTask)
+				anyEdited = true
+			} else if num == 3 {
+				fmt.Println("Enter new deadline time in HHMM(24 HOURS) format.")
+				newTime, _ := reader.ReadString('\n')
+				newTime = strings.TrimSpace(newTime)
+				anyEdited = true
+			} else if num == 4 {
+				fmt.Println("Enter new date in DD/MM/YYYY format")
+				newDate, _ := reader.ReadString('\n')
+				newDate = strings.TrimSpace(newDate)
+				fields[1] = newDate
+				anyEdited = true
 			} else {
 				tasks = append(tasks, line)
 				continue
@@ -194,6 +264,11 @@ func editTask() {
 	}
 	if !found {
 		fmt.Println("Task name entered wrong or doesn't exist")
+	}
+
+	if !anyEdited {
+		fmt.Println("No Tasks edited")
+		return
 	}
 	file, err = os.OpenFile(filepath, os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
