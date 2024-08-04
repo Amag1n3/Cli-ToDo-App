@@ -39,7 +39,7 @@ func writeTask() string {
 func listTasks() {
 	var choice int
 	userHome, _ := os.UserHomeDir()
-	filepath := userHome + "/Desktop/Cli_ToDo_List/todo_list.txt"
+	filepath := userHome + "/Desktop/Cli_ToDo_List/todolist.txt"
 	file, err := os.Open(filepath)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -194,7 +194,7 @@ func editTask() {
 	name, _ := reader.ReadString('\n')
 	name = strings.TrimSpace(name)
 	userHome, _ := os.UserHomeDir()
-	filepath := userHome + "/Desktop/Cli_ToDo_List/todo_list.txt"
+	filepath := userHome + "/Desktop/Cli_ToDo_List/todolist.txt"
 	file, err := os.Open(filepath)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -290,7 +290,7 @@ func editTask() {
 
 func main() {
 	userHome, _ := os.UserHomeDir()
-	filepath := userHome + "/Desktop/Cli_ToDo_List/todo_list.txt"
+	filepath := userHome + "/Desktop/Cli_ToDo_List/todolist.txt"
 	var input int
 	fmt.Println("Enter your choice: 1.Add task, 2. List task(s), 3. Edit Tasks")
 	fmt.Scanln(&input)
