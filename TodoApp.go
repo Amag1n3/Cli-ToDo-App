@@ -235,14 +235,13 @@ func editTask() {
 				fmt.Println("Enter new status for the task: ")
 				newStatus, _ := reader.ReadString('\n')
 				newStatus = strings.TrimSpace(newStatus)
-				if newStatus == "" {
-					newStatus = fields[3]
-				}
+				fields[3] = newStatus
 				anyEdited = true
 			} else if num == 3 {
 				fmt.Println("Enter new deadline time in HHMM(24 HOURS) format.")
 				newTime, _ := reader.ReadString('\n')
 				newTime = strings.TrimSpace(newTime)
+				fields[2] = newTime
 				anyEdited = true
 			} else if num == 4 {
 				fmt.Println("Enter new date in DD/MM/YYYY format")
