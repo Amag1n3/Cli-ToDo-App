@@ -7,7 +7,61 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/spf13/cobra"
 )
+
+var rootCmd = &cobra.Command{
+	Use:   "todo",
+	Short: "This command runs the CLI ToDo list app",
+	Long:  "This command has 3 functionalities which are passed as arguemtns to the command.(add, list, edit tasks)",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Welcome to my Command Line based ToDo List App made in Golang")
+	},
+}
+
+var addCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Use this command to add tasks",
+	Long:  "This command is used to add tasks to the list of your ToDo tasks",
+	Run: func(cmd *cobra.Command, args []string) {
+		userHome, _ := os.UserHomeDir()
+		filepath := userHome + "/Desktop/CliTodoApp/todolist.txt"
+		task := writeTask()
+		file, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			fmt.Println("error:", err)
+			return
+		}
+		defer file.Close()
+		file.WriteString(task)
+		fmt.Println("Task added successfully")
+	},
+}
+
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "Use this command to list all the tasks",
+	Long:  "This command is used to list all the tasks currently in your ToDo list",
+	Run: func(cmd *cobra.Command, args []string) {
+		listTasks()
+	},
+}
+
+var editCmd = &cobra.Command{
+	Use:   "edit",
+	Short: "Use this command to edit any task",
+	Long:  "This command can be used to edit any task as long as you know it's name. (Case Sensitive)",
+	Run: func(cmd *cobra.Command, args []string) {
+		editTask()
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(editCmd)
+}
 
 func writeTask() string {
 	reader := bufio.NewReader(os.Stdin)
@@ -289,27 +343,9 @@ func editTask() {
 }
 
 func main() {
-	userHome, _ := os.UserHomeDir()
-	filepath := userHome + "/Desktop/CliTodoApp/todolist.txt"
-	var input int
-	fmt.Println("Enter your choice: 1.Add task, 2. List task(s), 3. Edit Tasks")
-	fmt.Scanln(&input)
-
-	if input == 1 {
-		task := writeTask()
-		file, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			fmt.Println("error:", err)
-			return
-		}
-		defer file.Close()
-		file.WriteString(task)
-		fmt.Println("Task added successfully")
-	}
-	if input == 2 {
-		listTasks()
-	}
-	if input == 3 {
-		editTask()
+	err := rootCmd.Execute()
+	if err != nil {
+		fmt.Println("error:", err)
+		os.Exit(1)
 	}
 }
