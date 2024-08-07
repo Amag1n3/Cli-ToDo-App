@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -100,6 +101,8 @@ func listTasks() {
 		return // or handle the error appropriately
 	}
 	defer file.Close()
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Deadline Date", "Deadline Time", "Status", "Time Left"})
 	inputreader := bufio.NewReader(os.Stdin)
 	reader := bufio.NewReader(file)
 	fmt.Println("How would you like to list the tasks?(1: All, 2: Date, 3: Status)")
@@ -142,9 +145,9 @@ func listTasks() {
 				days := int(duration.Hours()) / 24
 				hours := int(duration.Hours()) % 24
 				minutes := int(duration.Minutes()) % 60
-				timeLeft = fmt.Sprintf("Time left to complete: %d days, %d hours, %d minutes", days, hours, minutes)
+				timeLeft = fmt.Sprintf("%d days, %d hours, %d minutes", days, hours, minutes)
 			}
-			fmt.Printf("Name: %s, Date: %s, Time: %s, Status: %s, %s\n", taskName, taskDate, taskTime, taskStatus, timeLeft)
+			table.Append([]string{taskName, taskDate, taskTime, taskStatus, timeLeft})
 
 		}
 	}
@@ -187,9 +190,9 @@ func listTasks() {
 					days := int(duration.Hours()) / 24
 					hours := int(duration.Hours()) % 24
 					minutes := int(duration.Minutes()) % 60
-					timeLeft = fmt.Sprintf("Time left to complete: %d days, %d hours, %d minutes", days, hours, minutes)
+					timeLeft = fmt.Sprintf("%d days, %d hours, %d minutes", days, hours, minutes)
 				}
-				fmt.Printf("Name: %s,Date: %s,Time: %s,Status: %s, %s\n", taskName, taskDate, taskTime, taskStatus, timeLeft)
+				table.Append([]string{taskName, taskDate, taskTime, taskStatus, timeLeft})
 			}
 
 		}
@@ -234,12 +237,13 @@ func listTasks() {
 					days := int(duration.Hours()) / 24
 					hours := int(duration.Hours()) % 24
 					minutes := int(duration.Minutes()) % 60
-					timeLeft = fmt.Sprintf("Time left to complete: %d days, %d hours, %d minutes", days, hours, minutes)
+					timeLeft = fmt.Sprintf("%d days, %d hours, %d minutes", days, hours, minutes)
 				}
-				fmt.Printf("Name: %s, Date: %s, Time: %s, Status: %s, %s\n", taskName, taskDate, taskTime, taskStatus, timeLeft)
+				table.Append([]string{taskName, taskDate, taskTime, taskStatus, timeLeft})
 			}
 		}
 	}
+	table.Render()
 }
 
 func editTask() {
